@@ -2,7 +2,8 @@ name: Clans2023
 description: Simple clans plugin for PulseMC
 version: '${project.version}'
 main: br.com.pulse.clans.Main
-softdepend: [BedWars2023, PlaceholderAPI, LeafPlugins, LeafPunish]
+depend: [BedWars2023]
+softdepend: [PlaceholderAPI, LeafPlugins, LeafPunish]
 commands:
   clan:
     aliases: [guild, cla]
