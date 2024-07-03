@@ -55,13 +55,20 @@ public class ClanManager implements ClanManagerAPI {
             config.getStringList("clans." + clanName + ".invites")
                     .stream().map(UUID::fromString).forEach(clan::addInvite);
 
-            String discord = config.getString("clans." + ".discord");
+            String discord = config.getString("clans." + clanName + ".discord");
             clan.setDiscord(discord);
 
-            int gamesWin = config.getInt("clans." + ".gamesWin");
-            int gamesDefeat = config.getInt("clans." + ".gamesDefeat");
+            int gamesWin = config.getInt("clans." + clanName + ".gamesWin");
+            int gamesDefeat = config.getInt("clans." + clanName + ".gamesDefeat");
             clan.setGamesWin(gamesWin);
             clan.setGamesDefeat(gamesDefeat);
+
+            if (config.contains("clans." + clanName + ".tournaments")) {
+                for (String tournament : config.getConfigurationSection("clans." + clanName + ".tournaments").getKeys(false)) {
+                    String place = config.getString("clans." + clanName + ".tournaments." + tournament);
+                    clan.addTournamentResult(tournament, place);
+                }
+            }
 
             clans.put(clanName, clan);
         }
@@ -80,6 +87,10 @@ public class ClanManager implements ClanManagerAPI {
             config.set("clans." + name + ".discord", clan.getDiscord());
             config.set("clans." + name + ".gamesWin", clan.getGamesWin());
             config.set("clans." + name + ".gamesDefeat", clan.getGamesDefeat());
+
+            for (Map.Entry<String, String> entry : clan.getTournamentResults().entrySet()) {
+                config.set("clans." + name + ".tournaments." + entry.getKey(), entry.getValue());
+            }
         }
 
         try {
@@ -218,6 +229,14 @@ public class ClanManager implements ClanManagerAPI {
         saveClans();
     }
 
+    public void setTournamentResult(String clanIdentifier, String tournamentName, String place) {
+        Clan clan = getClanByNameOrTag(clanIdentifier);
+        if (clan != null) {
+            clan.addTournamentResult(tournamentName, place);
+            saveClans();
+        }
+    }
+
     public String getCreationFormattedDate(Clan clan) {
         long creationDateInMillis = clan.getCreationDate();
         Date creationDate = new Date(creationDateInMillis);
@@ -307,5 +326,34 @@ public class ClanManager implements ClanManagerAPI {
         }
         return onlineMembers;
     }
+
+    public int compareTournamentPlaces(String place1, String place2) {
+        return getPlaceRank(place1) - getPlaceRank(place2);
+    }
+
+    public int getPlaceRank(String place) {
+        return switch (place.toLowerCase()) {
+            case "1º lugar" -> 1;
+            case "2º lugar" -> 2;
+            case "3º lugar" -> 3;
+            case "semi-final" -> 4;
+            case "quartas-de-final" -> 5;
+            case "fase-de-grupos" -> 6;
+            default -> Integer.MAX_VALUE;
+        };
+    }
+
+    public String getPlaceColor(String place) {
+        return switch (place.toLowerCase()) {
+            case "1º lugar" -> "§6";
+            case "2º lugar" -> "§7";
+            case "3º lugar" -> "§3";
+            case "semi-final" -> "§5";
+            case "quartas-de-final" -> "§9";
+            case "fase-de-grupos" -> "§8";
+            default -> "§f"; // Default white color for unknown positions
+        };
+    }
+
 
 }

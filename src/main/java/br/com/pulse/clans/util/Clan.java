@@ -17,6 +17,7 @@ public class Clan implements ClanAPI {
     private String discord;
     private long creationDate;
     private static final Map<String, Clan> allClans = new HashMap<>();
+    private final Map<String, String> tournamentResults;
 
     public Clan(String name, String tag, UUID leader, String color) {
         this.name = name;
@@ -28,6 +29,7 @@ public class Clan implements ClanAPI {
         this.color = "&7";
         this.discord = "";
         this.creationDate = System.currentTimeMillis(); // Assuming creation date is now
+        this.tournamentResults = new HashMap<>();
     }
 
     @Override
@@ -195,5 +197,13 @@ public class Clan implements ClanAPI {
 
     public static void removeClan(String name) {
         allClans.remove(name);
+    }
+
+    public void addTournamentResult(String tournamentName, String place) {
+        this.tournamentResults.put(tournamentName, place);
+    }
+
+    public Map<String, String> getTournamentResults() {
+        return this.tournamentResults;
     }
 }

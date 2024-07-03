@@ -43,4 +43,10 @@ public interface ClanManagerAPI {
 
     Set<Player> getOnlineMembers(Clan clan);
 
+    int compareTournamentPlaces(String place1, String place2);
+
+    int getPlaceRank(String place);
+
+    String getPlaceColor(String place);
+
 }

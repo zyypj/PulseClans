@@ -102,14 +102,19 @@ public class RankedEvents implements Listener {
             if (bedwarsAPI.getArenaUtil().isPlaying(player)) {
                 IArena arena = bedwarsAPI.getArenaUtil().getArenaByPlayer(player);
                 List<Player> players = arena.getPlayers();
-                for (Player jogadores : players) {
+                if (arena.getGroup().equalsIgnoreCase("Ranked1v1") ||
+                        arena.getGroup().equalsIgnoreCase("RankedDuplas") ||
+                        arena.getGroup().equalsIgnoreCase("Ranked4s") ||
+                        arena.getGroup().equalsIgnoreCase("RankedSolo")) {
+                    for (Player jogadores : players) {
 
-                    jogadores.sendMessage("");
-                    jogadores.sendMessage("§c§lUM JOGADOR NESSA SALA FOI BANIDO!");
-                    jogadores.sendMessage("§c§lCANCELANDO PARTIDA");
-                    jogadores.sendMessage("");
+                        jogadores.sendMessage("");
+                        jogadores.sendMessage("§c§lUM JOGADOR NESSA SALA FOI BANIDO!");
+                        jogadores.sendMessage("§c§lCANCELANDO PARTIDA");
+                        jogadores.sendMessage("");
 
-                    Bukkit.getScheduler().runTaskLater(plugin, () -> arena.removePlayer(jogadores, false), 30L);
+                        Bukkit.getScheduler().runTaskLater(plugin, () -> arena.removePlayer(jogadores, false), 30L);
+                    }
                 }
             }
         }
