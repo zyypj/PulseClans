@@ -161,12 +161,12 @@ public class ClanManager implements ClanManagerAPI {
         clan.addInvite(invitedUUID);
         saveClans();
 
-        invitedPlayer.sendMessage("§eVocê foi convidado para o clan §7[" + clan.getTag() + "] " + clan.getName() + "§e.");
-        TextComponent acceptText = new TextComponent("§a§l[Clique aqui] §apara aceitar");
+        invitedPlayer.sendMessage("§eVocê foi convidado para o clan " + clan.getColor() + "[" + clan.getTag() + "] " + clan.getName() + "§e.");
+        TextComponent acceptText = new TextComponent("§a§lCLIQUE AQUI §epara aceitar");
         acceptText.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/clan aceitar " + clan.getTag()));
         acceptText.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ComponentBuilder("§aAceitar o convite").create()));
 
-        TextComponent denyText = new TextComponent(" §c§l[Clique aqui] §cpara negar");
+        TextComponent denyText = new TextComponent(" §c§lCLIQUE AQUI §epara negar");
         denyText.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/clan negar " + clan.getTag()));
         denyText.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ComponentBuilder("§cNegar o convite").create()));
 

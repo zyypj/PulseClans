@@ -23,6 +23,8 @@ public interface ClanAPI {
 
     void removeMember(UUID player);
 
+    void removeMemberForPromote(UUID player);
+
     boolean isLeader(UUID player);
 
     boolean isManager(UUID player);

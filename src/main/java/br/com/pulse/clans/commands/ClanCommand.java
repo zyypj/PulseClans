@@ -26,7 +26,6 @@ public class ClanCommand implements CommandExecutor {
 
     @Override
     public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
-        Bukkit.getConsoleSender().sendMessage("/clan dado");
         if (!(sender instanceof Player player)) {
             sender.sendMessage("Apenas players!");
             return true;
@@ -49,6 +48,7 @@ public class ClanCommand implements CommandExecutor {
             player.sendMessage("§5/clan transferir §8§o<jogador> §7- Transferir a liderança do clan para outro jogador"); //
             player.sendMessage("§5/clan promover §8§o<jogador> §7- Promover um jogador à gerência"); //
             player.sendMessage("§5/clan rebaixar §8§o<jogador> §7- Tornar um gerente membro"); //
+            player.sendMessage("§5/clan torneios §8§o<nome/tag> §7Veja a participação de algum clan em torneios");
             player.sendMessage("§5/clan trocar §8§o<nome/tag> <novoNome/novaTag> §7- Trocar informações do clan"); //
             player.sendMessage("§5/cc §8§o<mensagem> §7- Mande uma mensagem para o clan");
             player.sendMessage("§5/clan stats §8§o<nome/tag> §7- Veja as estátisticas ranqueadas de um clan");
@@ -226,6 +226,7 @@ public class ClanCommand implements CommandExecutor {
                 return true;
             }
 
+            player.sendMessage("§aConvite enviado para " + invitedPlayerName + "!");
             clanManager.sendInvite(player, invitedPlayer, clan);
             return true;
         }
@@ -467,7 +468,7 @@ public class ClanCommand implements CommandExecutor {
             }
 
             clan.addManager(promotedPlayer.getUniqueId());
-            clan.removeMember(promotedPlayer.getUniqueId());
+            clan.removeMemberForPromote(promotedPlayer.getUniqueId());
             clanManager.saveClans();
 
             player.sendMessage("§a" + playerName + " promovido a gerente.");
@@ -679,6 +680,7 @@ public class ClanCommand implements CommandExecutor {
                 player.sendMessage("§5/clan transferir §8§o<jogador> §7- Transferir a liderança do clan para outro jogador"); //
                 player.sendMessage("§5/clan promover §8§o<jogador> §7- Promover um jogador à gerência"); //
                 player.sendMessage("§5/clan rebaixar §8§o<jogador> §7- Tornar um gerente membro"); //
+                player.sendMessage("§5/clan torneios §8§o<nome/tag> §7Veja a participação de algum clan em torneios");
                 player.sendMessage("§5/clan trocar §8§o<nome/tag> <novoNome/novaTag> §7- Trocar informações do clan"); //
                 player.sendMessage("§5/cc §8§o<mensagem> §7- Mande uma mensagem para o clan");
                 player.sendMessage("§5/clan stats §8§o<nome/tag> §7- Veja as estátisticas ranqueadas de um clan");
@@ -753,6 +755,63 @@ public class ClanCommand implements CommandExecutor {
             return true;
         }
 
+        if (args[0].equalsIgnoreCase("torneios") || args[0].equalsIgnoreCase("tournaments") ) {
+
+            if (args.length == 1) {
+
+                Clan clan = clanManager.getClanByPlayer(player.getUniqueId());
+
+                if (clan == null) {
+                    player.sendMessage("§cVocê não está em nenhum clan!");
+                    return true;
+                }
+
+                if (clan.getTournamentResults().isEmpty()) {
+                    player.sendMessage("§cSeu clan nunca participou de nenhum torneio.");
+                } else {
+                    player.sendMessage("§7Participação em torneios de " + clan.getColor().replace('&', '§') + "[" + clan.getTag() + "] " + clan.getName());
+                    player.sendMessage("");
+                    clan.getTournamentResults().entrySet().stream()
+                            .sorted((entry1, entry2) -> clanManager.compareTournamentPlaces(entry1.getValue(), entry2.getValue()))
+                            .forEach(entry -> {
+                                String color = clanManager.getPlaceColor(entry.getValue());
+                                player.sendMessage("§7(" + entry.getKey().replace('&', '§') + " §7- " + color + entry.getValue() + ")");
+                            });
+                }
+
+                return true;
+            }
+
+            if (args.length == 2) {
+
+                Clan clan = clanManager.getClanByNameOrTag(args[1]);
+
+                if (clan == null) {
+                    player.sendMessage("§cVocê não está em nenhum clan!");
+                    return true;
+                }
+
+                if (clan.getTournamentResults().isEmpty()) {
+                    player.sendMessage("§cSeu clan nunca participou de nenhum torneio.");
+                } else {
+                    player.sendMessage("§7Participação em torneios de " + clan.getColor().replace('&', '§') + "[" + clan.getTag() + "] " + clan.getName());
+                    player.sendMessage("");
+                    clan.getTournamentResults().entrySet().stream()
+                            .sorted((entry1, entry2) -> clanManager.compareTournamentPlaces(entry1.getValue(), entry2.getValue()))
+                            .forEach(entry -> {
+                                String color = clanManager.getPlaceColor(entry.getValue());
+                                player.sendMessage("§7(" + entry.getKey().replace('&', '§') + " §7- " + color + entry.getValue() + ")");
+                            });
+                }
+
+                return true;
+            }
+
+            player.sendMessage("§cUse /clan torneios <nome/Tag>");
+            return true;
+
+        }
+
         if (args[0].equalsIgnoreCase("setarTorneio")) {
 
             if (!player.hasPermission("clan.setTorneio")) {
@@ -797,6 +856,7 @@ public class ClanCommand implements CommandExecutor {
         player.sendMessage("§5/clan promover §8§o<jogador> §7- Promover um jogador à gerência"); //
         player.sendMessage("§5/clan rebaixar §8§o<jogador> §7- Tornar um gerente membro"); //
         player.sendMessage("§5/clan trocar §8§o<nome/tag> <novoNome/novaTag> §7- Trocar informações do clan"); //
+        player.sendMessage("§5/clan torneios §8§o<nome/tag> §7Veja a participação de algum clan em torneios");
         player.sendMessage("§5/cc §8§o<mensagem> §7- Mande uma mensagem para o clan");
         player.sendMessage("§5/clan stats §8§o<nome/tag> §7- Veja as estátisticas ranqueadas de um clan");
         if (player.hasPermission("clan.colortag")) {

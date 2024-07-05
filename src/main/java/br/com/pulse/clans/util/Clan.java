@@ -79,6 +79,11 @@ public class Clan implements ClanAPI {
     }
 
     @Override
+    public void removeMemberForPromote(UUID player) {
+        members.remove(player);
+    }
+
+    @Override
     public boolean isLeader(UUID player) {
         return leader.equals(player);
     }
