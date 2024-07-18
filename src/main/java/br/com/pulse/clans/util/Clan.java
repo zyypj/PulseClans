@@ -26,7 +26,7 @@ public class Clan implements ClanAPI {
         this.managers = new HashSet<>();
         this.members = new HashSet<>();
         this.invites = new HashSet<>();
-        this.color = "&7";
+        this.color = color;
         this.discord = "";
         this.creationDate = System.currentTimeMillis(); // Assuming creation date is now
         this.tournamentResults = new HashMap<>();

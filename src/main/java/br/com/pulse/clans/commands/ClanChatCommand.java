@@ -2,6 +2,7 @@ package br.com.pulse.clans.commands;
 
 import br.com.pulse.clans.util.Clan;
 import br.com.pulse.clans.util.ClanManager;
+import me.clip.placeholderapi.PlaceholderAPI;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -17,12 +18,11 @@ public class ClanChatCommand implements CommandExecutor {
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        if (!(sender instanceof Player)) {
+        if (!(sender instanceof Player player)) {
             sender.sendMessage("Only players can use this command.");
             return true;
         }
 
-        Player player = (Player) sender;
         Clan clan = clanManager.getClanByPlayer(player.getUniqueId());
         if (clan == null) {
             player.sendMessage("§cVocê não está em nenhum clan.");
@@ -35,7 +35,14 @@ public class ClanChatCommand implements CommandExecutor {
         }
 
         String message = String.join(" ", args);
-        String formattedMessage = clan.getColor() + "[" + clan.getTag() + "] §7" + player.getName() + " » §f" + message;
+        String formattedMessage = clan.getColor().replace('&', '§') + "[" + clan.getTag() + "] §7" +
+        PlaceholderAPI.setPlaceholders(player, "%leaftags_tag_prefix%")
+                + player.getName() + " » §f" + message;
+
+        if (clanManager.getOnlineMembers(clan).isEmpty()) {
+            player.sendMessage(formattedMessage);
+            return true;
+        }
 
         for (Player member : clanManager.getOnlineMembers(clan)) {
             member.sendMessage(formattedMessage);

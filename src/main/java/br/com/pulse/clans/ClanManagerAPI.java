@@ -9,7 +9,7 @@ import java.util.UUID;
 
 public interface ClanManagerAPI {
 
-    void createClan(Player player, String name, String tag);
+    void createClan(Player player, String name, String tag, String color);
 
     void deleteClan(Clan clan);
 

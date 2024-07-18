@@ -100,7 +100,7 @@ public class ClanManager implements ClanManagerAPI {
         }
     }
 
-    public void createClan(Player player, String name, String tag) {
+    public void createClan(Player player, String name, String tag, String color) {
         if (getClanByPlayer(player.getUniqueId()) != null) {
             player.sendMessage("§cVocê já está em um clan.");
             return;
@@ -111,7 +111,7 @@ public class ClanManager implements ClanManagerAPI {
             return;
         }
 
-        Clan clan = new Clan(name, tag.toUpperCase(), player.getUniqueId(), "&7");
+        Clan clan = new Clan(name, tag.toUpperCase(), player.getUniqueId(), color);
         clans.put(name, clan);
         clan.setCreationDate(System.currentTimeMillis());
         clan.setDiscord(null);
@@ -158,10 +158,15 @@ public class ClanManager implements ClanManagerAPI {
             return;
         }
 
+        if (getClanByPlayer(invitedUUID) != null) {
+            inviter.sendMessage("§cEsse jogador já está em um clan!");
+            return;
+        }
+
         clan.addInvite(invitedUUID);
         saveClans();
 
-        invitedPlayer.sendMessage("§eVocê foi convidado para o clan " + clan.getColor() + "[" + clan.getTag() + "] " + clan.getName() + "§e.");
+        invitedPlayer.sendMessage("§eVocê foi convidado para o clan " + clan.getColor().replace('&', '§') + "[" + clan.getTag() + "] " + clan.getName() + "§e.");
         TextComponent acceptText = new TextComponent("§a§lCLIQUE AQUI §epara aceitar");
         acceptText.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/clan aceitar " + clan.getTag()));
         acceptText.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ComponentBuilder("§aAceitar o convite").create()));
@@ -174,12 +179,20 @@ public class ClanManager implements ClanManagerAPI {
     }
 
     public void acceptInvite(Player player, Clan clan) {
+
+        if (hasClan(player)) {
+            player.sendMessage("§cVocê já está em um clan!");
+            return;
+        }
+
         if (clan.hasInvite(player.getUniqueId())) {
             clan.addMember(player.getUniqueId());
             clan.removeInvite(player.getUniqueId());
             saveClans();
 
             player.sendMessage("§aVocê entrou no clan §7[" + clan.getTag() + "] " + clan.getName() + "§a.");
+            broadcastMessage(clan.getTag(), clan.getColor().replace('&', '§') + "[" +
+                    clan.getTag() + "]" + " §7" + player.getName() + " entrou no clan");
         } else {
             player.sendMessage("§cVocê não tem pedidos pendentes desse clan.");
         }
@@ -324,6 +337,18 @@ public class ClanManager implements ClanManagerAPI {
                 onlineMembers.add(player);
             }
         }
+
+        for (UUID managerId : clan.getManagers()) {
+            Player player = Bukkit.getPlayer(managerId);
+            if (player != null && player.isOnline()) {
+                onlineMembers.add(player);
+            }
+        }
+
+        UUID playerUUID = clan.getLeader();
+        Player player = Bukkit.getPlayer(playerUUID);
+        onlineMembers.add(player);
+
         return onlineMembers;
     }
 
@@ -355,5 +380,10 @@ public class ClanManager implements ClanManagerAPI {
         };
     }
 
+    public boolean hasClan(Player player) {
 
+        Clan clan = getClanByPlayer(player.getUniqueId());
+
+        return clan != null;
+    }
 }

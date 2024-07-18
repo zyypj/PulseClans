@@ -6,6 +6,7 @@ import br.com.pulse.clans.util.ClanManager;
 import com.tomkeuper.bedwars.api.BedWars;
 import me.clip.placeholderapi.PlaceholderAPI;
 import org.bukkit.Bukkit;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -73,20 +74,33 @@ public class ClanCommand implements CommandExecutor {
 
                 player.sendMessage("§7Membros do Clan §l" + clan.getName());
                 player.sendMessage("");
-                Player leaderP = Bukkit.getPlayer(clan.getLeader());
-                player.sendMessage(PlaceholderAPI.setPlaceholders(leaderP, "%leaftags_tag_prefix%")
-                        + leaderP.getName() + " - §4Líder");
+                UUID leaderUUID = clan.getLeader();
+                Player leaderP = Bukkit.getPlayer(leaderUUID);
+                if (leaderP != null) {
+                    player.sendMessage("§7" + leaderP.getName() + " - §6Líder");
+                } else {
+                    OfflinePlayer offlineLeader = Bukkit.getOfflinePlayer(leaderUUID);
+                    player.sendMessage("§7" + offlineLeader.getName() + " - §6Líder");
+                }
 
                 for (UUID manager : clan.getManagers()) {
                     Player managerP = Bukkit.getPlayer(manager);
-                    player.sendMessage(PlaceholderAPI.setPlaceholders(managerP, "%leaftags_tag_prefix%")
-                            + managerP.getName() + " - §cGerente");
+                    if (managerP != null) {
+                        player.sendMessage("§7" + managerP.getName() + " - §cGerente");
+                    } else {
+                        OfflinePlayer offlineManager = Bukkit.getOfflinePlayer(manager);
+                        player.sendMessage("§7" + offlineManager.getName() + " - §cGerente");
+                    }
                 }
 
                 for (UUID member : clan.getMembers()) {
                     Player memberP = Bukkit.getPlayer(member);
-                    player.sendMessage(PlaceholderAPI.setPlaceholders(memberP, "%leaftags_tag_prefix%")
-                            + memberP.getName() + " - §7Membro");
+                    if (memberP != null) {
+                        player.sendMessage("§7" + memberP.getName() + " - §7Membro");
+                    } else {
+                        OfflinePlayer offlineMember = Bukkit.getOfflinePlayer(member);
+                        player.sendMessage("§7" + offlineMember.getName() + " - §7Membro");
+                    }
                 }
 
                 return true;
@@ -102,20 +116,33 @@ public class ClanCommand implements CommandExecutor {
 
                 player.sendMessage("§7Membros do Clan §l" + clan.getName());
                 player.sendMessage("");
-                Player leaderP = Bukkit.getPlayer(clan.getLeader());
-                player.sendMessage(PlaceholderAPI.setPlaceholders(leaderP, "%leaftags_tag_prefix%")
-                        + leaderP.getName() + " - §6Líder");
+                UUID leaderUUID = clan.getLeader();
+                Player leaderP = Bukkit.getPlayer(leaderUUID);
+                if (leaderP != null) {
+                    player.sendMessage("§7" + leaderP.getName() + " - §6Líder");
+                } else {
+                    OfflinePlayer offlineLeader = Bukkit.getOfflinePlayer(leaderUUID);
+                    player.sendMessage("§7" + offlineLeader.getName() + " - §6Líder");
+                }
 
                 for (UUID manager : clan.getManagers()) {
                     Player managerP = Bukkit.getPlayer(manager);
-                    player.sendMessage(PlaceholderAPI.setPlaceholders(managerP, "%leaftags_tag_prefix%")
-                            + managerP.getName() + " - §cGerente");
+                    if (managerP != null) {
+                        player.sendMessage("§7" + managerP.getName() + " - §cGerente");
+                    } else {
+                        OfflinePlayer offlineManager = Bukkit.getOfflinePlayer(manager);
+                        player.sendMessage("§7" + offlineManager.getName() + " - §cGerente");
+                    }
                 }
 
                 for (UUID member : clan.getMembers()) {
                     Player memberP = Bukkit.getPlayer(member);
-                    player.sendMessage(PlaceholderAPI.setPlaceholders(memberP, "%leaftags_tag_prefix%")
-                            + memberP.getName() + " - §7Membro");
+                    if (memberP != null) {
+                        player.sendMessage("§7" + memberP.getName() + " - §7Membro");
+                    } else {
+                        OfflinePlayer offlineMember = Bukkit.getOfflinePlayer(member);
+                        player.sendMessage("§7" + offlineMember.getName() + " - §7Membro");
+                    }
                 }
 
                 return true;
@@ -171,32 +198,55 @@ public class ClanCommand implements CommandExecutor {
                 return true;
             }
 
-            clanManager.createClan(player, clanName, clanTag);
+            if (player.hasPermission("bw.creator")) {
+                clanManager.createClan(player, clanName, clanTag, "&4");
+                return true;
+            }
+
+            clanManager.createClan(player, clanName, clanTag, "&7");
             return true;
         }
 
         //clan excluir
         if (args[0].equalsIgnoreCase("excluir") || args[0].equalsIgnoreCase("delete")) {
 
-            if (args.length > 1) {
-                player.sendMessage("§cUse /clan " + args[0] + ".");
+            if (args.length == 1) {
+
+                Clan clan = clanManager.getClanByPlayer(player.getUniqueId());
+
+                if (clan == null) {
+                    player.sendMessage("§cVocê não está em nenhum clan.");
+                    return true;
+                }
+
+                if (!clan.isLeader(player.getUniqueId())) {
+                    player.sendMessage("§cVocê não é líder de nenhum clan.");
+                    return true;
+                }
+
+                clanManager.deleteClan(clan);
+                player.sendMessage("§aClan excluido com sucesso.");
+                return true;
+            } else if (args.length == 2) {
+
+                if (!player.hasPermission("clan.delete.others")) {
+                    player.sendMessage("§cVocê não tem permissão para excluir outros clans");
+                    return true;
+                }
+
+                Clan clan = clanManager.getClanByNameOrTag(args[1]);
+
+                if (clan == null) {
+                    player.sendMessage("§cClan não encontrado. ");
+                    return true;
+                }
+
+                clanManager.deleteClan(clan);
+                player.sendMessage("§aClan " + clan.getName() + " excluido com sucesso.");
                 return true;
             }
 
-            Clan clan = clanManager.getClanByPlayer(player.getUniqueId());
-
-            if (clan == null) {
-                player.sendMessage("§cVocê não está em nenhum clan.");
-                return true;
-            }
-
-            if (!clan.isLeader(player.getUniqueId())) {
-                player.sendMessage("§cVocê não é líder de nenhum clan.");
-                return true;
-            }
-
-            clanManager.deleteClan(clan);
-            player.sendMessage("§aClan excluido com sucesso.");
+            player.sendMessage("§cUse: /clan excluir");
             return true;
         }
 
@@ -226,6 +276,11 @@ public class ClanCommand implements CommandExecutor {
                 return true;
             }
 
+            if (clan.hasInvite(invitedPlayer.getUniqueId())) {
+                player.sendMessage("§cVocê já convidou esse jogador!");
+                return true;
+            }
+
             player.sendMessage("§aConvite enviado para " + invitedPlayerName + "!");
             clanManager.sendInvite(player, invitedPlayer, clan);
             return true;
@@ -245,8 +300,6 @@ public class ClanCommand implements CommandExecutor {
             }
 
             clanManager.acceptInvite(player, clan);
-            clanManager.broadcastMessage(clan.getTag(), clan.getColor().replace('&', '§') + "[" +
-                    clan.getTag() + "]" + " §7" + player.getName() + " entrou no clan");
             return true;
         }
 
@@ -582,13 +635,22 @@ public class ClanCommand implements CommandExecutor {
 
                 int nMembers = clan.getMembers().size() + clan.getManagers().size() + 1;
 
-                Player leader = Bukkit.getPlayer(clan.getLeader());
+                UUID leaderUUID = clan.getLeader();
+                Player leader = Bukkit.getPlayer(leaderUUID);
+                String leaderName;
+                if (leader != null) {
+                    leaderName = leader.getName();
+                } else {
+                    OfflinePlayer offlineLeader = Bukkit.getOfflinePlayer(leaderUUID);
+                    leaderName = offlineLeader.getName();
+                }
+
                 String formattedDate = clanManager.getCreationFormattedDate(clan);
                 player.sendMessage("§7Informações do Clan §l" + clan.getName());
                 player.sendMessage("");
                 player.sendMessage("§7Tag: " + clan.getColor().replace('&', '§') + "[" + clan.getTag() + "]");
                 player.sendMessage("§7Data de Criação: §5" + formattedDate);
-                player.sendMessage("§7Líder: §5" + leader.getName());
+                player.sendMessage("§7Líder: §5" + leaderName);
                 player.sendMessage("§7Gerentes: §5" + clan.getManagers().size());
                 player.sendMessage("§7Membros: §5" + nMembers);
                 player.sendMessage("§7Discord: §5" + clan.getDiscord());
@@ -606,13 +668,22 @@ public class ClanCommand implements CommandExecutor {
 
                 int nMembers = clan.getMembers().size() + clan.getManagers().size() + 1;
 
-                Player leader = Bukkit.getPlayer(clan.getLeader());
+                UUID leaderUUID = clan.getLeader();
+                Player leader = Bukkit.getPlayer(leaderUUID);
+                String leaderName;
+                if (leader != null) {
+                    leaderName = leader.getName();
+                } else {
+                    OfflinePlayer offlineLeader = Bukkit.getOfflinePlayer(leaderUUID);
+                    leaderName = offlineLeader.getName();
+                }
+
                 String formattedDate = clanManager.getCreationFormattedDate(clan);
                 player.sendMessage("§7Informações do Clan §l" + clan.getName());
                 player.sendMessage("");
                 player.sendMessage("§7Tag: " + clan.getColor().replace('&', '§') + "[" + clan.getTag() + "]");
                 player.sendMessage("§7Data de Criação: §5" + formattedDate);
-                player.sendMessage("§7Líder: §5" + leader.getName());
+                player.sendMessage("§7Líder: §5" + leaderName);
                 player.sendMessage("§7Gerentes: §5" + clan.getManagers().size());
                 player.sendMessage("§7Membros: §5" + nMembers);
                 player.sendMessage("§7Discord: §5" + clan.getDiscord());
