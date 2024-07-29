@@ -6,14 +6,20 @@ import me.clip.placeholderapi.expansion.PlaceholderExpansion;
 import org.bukkit.OfflinePlayer;
 import org.jetbrains.annotations.NotNull;
 
+import java.io.File;
+import java.util.Map;
+import java.util.UUID;
+
 public class PlaceholderSupport extends PlaceholderExpansion {
 
     private final ClanPlaceholder clanPlaceholder;
     private final ClanManager clanManagerS;
+    private final Map<UUID, Boolean> displayPreferences;
 
-    public PlaceholderSupport(ClanManager clanManagerS) {
+    public PlaceholderSupport(ClanManager clanManagerS, File pluginFolder, Map<UUID, Boolean> displayPreferences) {
         this.clanPlaceholder = new ClanPlaceholder(clanManagerS);
         this.clanManagerS = clanManagerS;
+        this.displayPreferences = displayPreferences;
     }
 
     @Override
@@ -43,7 +49,12 @@ public class PlaceholderSupport extends PlaceholderExpansion {
                 if (clan == null || clan.getTag().isEmpty()) {
                     return " "; // Espaços vazios para substituir a tag
                 } else {
-                    return clan.getColor() + " [" + clan.getTag() + "] "; // Tag com espaços em branco ao redor
+                    boolean displayTag = displayPreferences.getOrDefault(player.getUniqueId(), true);
+                    if (displayTag) {
+                        return clan.getColor() + " [" + clan.getTag() + "] "; // Tag com espaços em branco ao redor
+                    } else {
+                        return " ";
+                    }
                 }
         }
 

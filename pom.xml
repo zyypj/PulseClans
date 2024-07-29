@@ -109,5 +109,12 @@
           <scope>system</scope>
           <systemPath>C:/Users/zyypj/Documents/New Projects/Dependency/LeafPunish.jar</systemPath>
       </dependency>
+      <dependency>
+          <groupId>com.github.syncwrld</groupId>
+          <artifactId>api</artifactId>
+          <version>1.0</version>
+          <scope>system</scope>
+          <systemPath>C:/Users/zyypj/Documents/New Projects/Dependency/PRanked.jar</systemPath>
+      </dependency>
   </dependencies>
 </project>

@@ -2,7 +2,7 @@ name: Clans2023
 description: Simple clans plugin for PulseMC
 version: '${project.version}'
 main: br.com.pulse.clans.Main
-depend: [BedWars2023]
+depend: [BedWars2023, PRanked4sBOT]
 softdepend: [PlaceholderAPI, LeafPlugins, LeafPunish]
 commands:
   clan:
@@ -11,3 +11,11 @@ commands:
   cc:
     aliases: [clanchat]
     description: Chat clans
+  clandisplaytag:
+    description: Comando para exibir ou ocultar a tag do clan
+    usage: /clandisplaytag <on/off>
+  clanadmin:
+    description: Clan Admin
+  cxc:
+    description: CxC
+    aliases: [clanxclan, clancompetitive]

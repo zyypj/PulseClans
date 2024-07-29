@@ -8,6 +8,7 @@ import net.md_5.bungee.api.chat.HoverEvent;
 import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
@@ -16,18 +17,22 @@ import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class ClanManager implements ClanManagerAPI {
     private final Map<String, Clan> clans;
     private final File file;
     private final FileConfiguration config;
     private final Main plugin;
+    private final Map<UUID, Boolean> displayPreferences;
 
     public ClanManager(Main plugin) {
         this.plugin = plugin;
         this.clans = new HashMap<>();
         this.file = new File(plugin.getDataFolder(), "clans.yml");
         this.config = YamlConfiguration.loadConfiguration(file);
+        this.displayPreferences = new HashMap<>();
+        loadDisplayPreferences();
         loadClans();
     }
 
@@ -70,26 +75,52 @@ public class ClanManager implements ClanManagerAPI {
                 }
             }
 
+            if (config.contains("clans." + clanName + ".availableColors")) {
+                ConfigurationSection colorsSection = config.getConfigurationSection("clans." + clanName + ".availableColors");
+                for (String colorName : colorsSection.getKeys(false)) {
+                    String colorCode = colorsSection.getString(colorName);
+                    clan.addColorTag(colorName, colorCode);
+                }
+            }
+
             clans.put(clanName, clan);
         }
     }
 
     public void saveClans() {
-        for (String name : clans.keySet()) {
-            Clan clan = clans.get(name);
-            config.set("clans." + name + ".tag", clan.getTag());
-            config.set("clans." + name + ".color", clan.getColor());
-            config.set("clans." + name + ".leader", clan.getLeader().toString());
-            config.set("clans." + name + ".managers", new ArrayList<>(clan.getManagers()).stream().map(UUID::toString).toArray());
-            config.set("clans." + name + ".members", new ArrayList<>(clan.getMembers()).stream().map(UUID::toString).toArray());
-            config.set("clans." + name + ".invites", new ArrayList<>(clan.getInvites()).stream().map(UUID::toString).toArray());
-            config.set("clans." + name + ".creationDate", clan.getCreationDate());
-            config.set("clans." + name + ".discord", clan.getDiscord());
-            config.set("clans." + name + ".gamesWin", clan.getGamesWin());
-            config.set("clans." + name + ".gamesDefeat", clan.getGamesDefeat());
+        for (String clanName : clans.keySet()) {
+            Clan clan = clans.get(clanName);
 
-            for (Map.Entry<String, String> entry : clan.getTournamentResults().entrySet()) {
-                config.set("clans." + name + ".tournaments." + entry.getKey(), entry.getValue());
+            config.set("clans." + clanName + ".tag", clan.getTag());
+            config.set("clans." + clanName + ".color", clan.getColor());
+            config.set("clans." + clanName + ".leader", clan.getLeader().toString());
+            config.set("clans." + clanName + ".creationDate", clan.getCreationDate());
+
+            List<String> managers = clan.getManagers().stream()
+                    .map(UUID::toString)
+                    .collect(Collectors.toList());
+            config.set("clans." + clanName + ".managers", managers);
+
+            List<String> members = clan.getMembers().stream()
+                    .map(UUID::toString)
+                    .collect(Collectors.toList());
+            config.set("clans." + clanName + ".members", members);
+
+            List<String> invites = clan.getInvites().stream()
+                    .map(UUID::toString)
+                    .collect(Collectors.toList());
+            config.set("clans." + clanName + ".invites", invites);
+
+            if (clan.getDiscord() != null) {
+                config.set("clans." + clanName + ".discord", clan.getDiscord());
+            }
+
+            config.set("clans." + clanName + ".gamesWin", clan.getGamesWin());
+            config.set("clans." + clanName + ".gamesDefeat", clan.getGamesDefeat());
+
+            Map<String, String> colors = clan.getAvailableColors();
+            for (Map.Entry<String, String> entry : colors.entrySet()) {
+                config.set("clans." + clanName + ".availableColors." + entry.getKey(), entry.getValue());
             }
         }
 
@@ -361,9 +392,10 @@ public class ClanManager implements ClanManagerAPI {
             case "1º lugar" -> 1;
             case "2º lugar" -> 2;
             case "3º lugar" -> 3;
-            case "semi-final" -> 4;
-            case "quartas-de-final" -> 5;
-            case "fase-de-grupos" -> 6;
+            case "semi final" -> 4;
+            case "quartas de final" -> 5;
+            case "fase de grupos" -> 6;
+            case "expulso" -> 7;
             default -> Integer.MAX_VALUE;
         };
     }
@@ -373,11 +405,16 @@ public class ClanManager implements ClanManagerAPI {
             case "1º lugar" -> "§6";
             case "2º lugar" -> "§7";
             case "3º lugar" -> "§3";
-            case "semi-final" -> "§5";
-            case "quartas-de-final" -> "§9";
-            case "fase-de-grupos" -> "§8";
+            case "semi final" -> "§5";
+            case "quartas de final" -> "§9";
+            case "fase de grupos" -> "§8";
+            case "expulso" -> "§4§l";
             default -> "§f"; // Default white color for unknown positions
         };
+    }
+
+    public Map<UUID, Boolean> getDisplayPreferences() {
+        return displayPreferences;
     }
 
     public boolean hasClan(Player player) {
@@ -386,4 +423,62 @@ public class ClanManager implements ClanManagerAPI {
 
         return clan != null;
     }
+
+    private void loadDisplayPreferences() {
+        File file = new File(plugin.getDataFolder(), "displays.yml");
+        if (!file.exists()) {
+            return;
+        }
+        FileConfiguration config = YamlConfiguration.loadConfiguration(file);
+        if (!config.contains("clans")) {
+            return;
+        }
+        for (String uuidString : config.getConfigurationSection("clans").getKeys(false)) {
+            try {
+                UUID uuid = UUID.fromString(uuidString);
+                boolean display = config.getBoolean("clans." + uuidString);
+                displayPreferences.put(uuid, display);
+            } catch (IllegalArgumentException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public void saveDisplayPreferences() {
+        File file = new File(plugin.getDataFolder(), "displays.yml");
+        FileConfiguration config = YamlConfiguration.loadConfiguration(file);
+        for (Map.Entry<UUID, Boolean> entry : displayPreferences.entrySet()) {
+            config.set("clans." + entry.getKey().toString(), entry.getValue());
+        }
+        try {
+            config.save(file);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public boolean inSameClan(List<Player> players) {
+        if (players == null || players.isEmpty()) {
+            return false;
+        }
+
+        // Obtenha o UUID do primeiro jogador e o clã dele
+        UUID firstPlayerUUID = players.get(0).getUniqueId();
+        Clan firstPlayerClan = getClanByPlayer(firstPlayerUUID);
+        if (firstPlayerClan == null) {
+            return false;
+        }
+
+        // Verifique se todos os outros jogadores estão no mesmo clã
+        for (Player player : players) {
+            UUID playerUUID = player.getUniqueId();
+            Clan playerClan = getClanByPlayer(playerUUID);
+            if (playerClan == null || !Objects.equals(playerClan, firstPlayerClan)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
 }

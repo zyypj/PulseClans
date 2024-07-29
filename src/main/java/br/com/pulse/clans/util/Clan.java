@@ -13,23 +13,25 @@ public class Clan implements ClanAPI {
     private final Set<UUID> invites;
     private int gamesWin;
     private int gamesDefeat;
-    private String color;
     private String discord;
     private long creationDate;
     private static final Map<String, Clan> allClans = new HashMap<>();
     private final Map<String, String> tournamentResults;
+    private final Map<String, String> availableColors;
+    private String color;
 
     public Clan(String name, String tag, UUID leader, String color) {
         this.name = name;
         this.tag = tag;
         this.leader = leader;
+        this.color = color;
         this.managers = new HashSet<>();
         this.members = new HashSet<>();
         this.invites = new HashSet<>();
-        this.color = color;
         this.discord = "";
-        this.creationDate = System.currentTimeMillis(); // Assuming creation date is now
+        this.creationDate = System.currentTimeMillis();
         this.tournamentResults = new HashMap<>();
+        this.availableColors = new HashMap<>();
     }
 
     @Override
@@ -75,7 +77,7 @@ public class Clan implements ClanAPI {
     @Override
     public void removeMember(UUID player) {
         members.remove(player);
-        managers.remove(player); // Remove player from managers as well
+        managers.remove(player);
     }
 
     @Override
@@ -119,11 +121,6 @@ public class Clan implements ClanAPI {
     }
 
     @Override
-    public String getColor() {
-        return color;
-    }
-
-    @Override
     public String getDiscord() {
         if (discord == null) {
             return "§cNão informado";
@@ -153,11 +150,6 @@ public class Clan implements ClanAPI {
     @Override
     public void setCreationDate(long creationDate) {
         this.creationDate = creationDate;
-    }
-
-    @Override
-    public void setColor(String color) {
-        this.color = color;
     }
 
     @Override
@@ -210,5 +202,25 @@ public class Clan implements ClanAPI {
 
     public Map<String, String> getTournamentResults() {
         return this.tournamentResults;
+    }
+
+    public void addColorTag(String name, String color) {
+        this.availableColors.put(name, color);
+    }
+
+    public Map<String, String> getAvailableColors() {
+        return this.availableColors;
+    }
+
+    public boolean hasColorTag(String color) {
+        return this.availableColors.containsValue(color);
+    }
+
+    public void setColor(String color) {
+        this.color = color;
+    }
+
+    public String getColor() {
+        return this.color;
     }
 }
